@@ -18,6 +18,7 @@ import migrate as m
 from portable import file_lock
 
 HERE = Path(__file__).resolve().parent
+SCRIPTS = HERE.parent / 'scripts'
 _children = []
 
 
@@ -118,7 +119,7 @@ def desktop_quote(value):
 
 def install_shortcut():
     if sys.platform == 'win32':
-        subprocess.run(['powershell.exe', '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', str(HERE / 'install-shortcut.ps1')],
+        subprocess.run(['powershell.exe', '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', str(SCRIPTS / 'install-shortcut.ps1')],
                        check=True, creationflags=subprocess.CREATE_NO_WINDOW)
         return
     desktop = Path.home() / 'Desktop'
@@ -136,13 +137,13 @@ def install_shortcut():
                           'CFBundleExecutable': 'launch', 'CFBundleIconFile': 'account-manager.icns',
                           'CFBundlePackageType': 'APPL', 'LSUIElement': True}, output)
         entry = bundle / 'MacOS' / 'launch'
-        entry.write_text('#!/bin/sh\nexec /bin/sh ' + shlex.quote(str(HERE / 'start-web.sh')) + '\n', encoding='utf-8')
+        entry.write_text('#!/bin/sh\nexec /bin/sh ' + shlex.quote(str(SCRIPTS / 'start-web.sh')) + '\n', encoding='utf-8')
         entry.chmod(0o755)
         shutil.copyfile(HERE / 'ui/account-manager.icns', bundle / 'Resources/account-manager.icns')
     else:
         content = ('[Desktop Entry]\nType=Application\nName=Codex Account Manager\n'
                    'Comment=Open the local Codex account manager\n'
-                   'Exec=/bin/sh ' + desktop_quote(HERE / 'start-web.sh') + '\n'
+                   'Exec=/bin/sh ' + desktop_quote(SCRIPTS / 'start-web.sh') + '\n'
                    'Icon=' + str(HERE / 'ui/account-manager.png') + '\nTerminal=false\nCategories=Utility;\n')
         application_dir = Path(os.environ.get('XDG_DATA_HOME', str(Path.home() / '.local/share'))) / 'applications'
         application_dir.mkdir(parents=True, exist_ok=True)

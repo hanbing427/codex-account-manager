@@ -1,7 +1,7 @@
 param([Parameter(ValueFromRemainingArguments=$true)][string[]]$ToolArgs)
 $ErrorActionPreference = 'Stop'
 $env:PYTHONUTF8 = '1'
-$scriptPath = Join-Path $PSScriptRoot 'migrate.py'
+$scriptPath = Join-Path $PSScriptRoot '..\app\migrate.py'
 $candidates = @()
 $bundled = Join-Path $env:USERPROFILE '.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe'
 if (Test-Path -LiteralPath $bundled) { $candidates += $bundled }

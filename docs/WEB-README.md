@@ -1,10 +1,12 @@
+> 本文所有命令均在项目根目录执行；首次使用请先看 [快速开始](../README.md)。
+
 # Codex 账号配置网页
 
 ## 启动
 
-Windows 点击桌面快捷方式或 `Start-Web.vbs`，macOS/Linux 使用 `start-web.sh` 或安装的桌面入口。首次运行自动后台启动，后续点击复用后台服务并打开网页；关闭浏览器或启动窗口不影响定时维护。默认端口 8765，占用时顺延。跨平台安装、移动目录、停止服务、日志位置详见 [README.md](README.md)。
+Windows 点击桌面快捷方式或 `scripts/Start-Web.vbs`，macOS/Linux 使用 `scripts/start-web.sh` 或安装的桌面入口。首次运行自动后台启动，后续点击复用后台服务并打开网页；关闭浏览器或启动窗口不影响定时维护。默认端口 8765，占用时顺延。跨平台安装、移动目录、停止服务、日志位置详见 [README.md](../README.md)。
 
-原来的 `Start.cmd` 和迁移命令继续可用。网页复用 `migrate.py` 的会话迁移、完整性校验和回退逻辑。
+原来的 `scripts/Start.cmd` 和迁移命令继续可用。网页复用 `migrate.py` 的会话迁移、完整性校验和回退逻辑。
 
 ## 使用
 
@@ -31,7 +33,7 @@ model = "gpt-6"
 
 ## 文件存储与恢复
 
-- 默认管理环境变量 `CODEX_HOME` 指定的位置，否则是当前用户的 `.codex`。可通过 `Start-Web.cmd --home "D:\CodexHome"` 指定。
+- 默认管理环境变量 `CODEX_HOME` 指定的位置，否则是当前用户的 `.codex`。可通过 `scripts/Start-Web.cmd --home "D:\CodexHome"` 指定。
 - 账号副本保存在 `CODEX_HOME/account-manager/profiles/`。令牌和密钥保存在本机；账号列表不返回认证原文，但配置编辑器和账号导出会读取原始凭据。
 - Windows 使用私有 ACL；macOS/Linux 使用 0700 私有目录。文件本身没有额外加密；不要公开分享账号目录或备份。
 - 每次切换前备份原 `auth.json` 和 `config.toml`，记录在 `account-manager/backups/`。会话备份继续使用原脚本的 `provider-migration-backups/`。
@@ -61,6 +63,6 @@ model = "gpt-6"
 
 ## 验证
 
-`python -m unittest -v test_webui test_maintenance` 在临时目录验证真实 SQLite/JSONL 迁移、完整恢复、失败回退、令牌轮换与同步、重启顺序、等待取消、仅 auth 配置生成与中断恢复。网络和桌面关闭/启动使用测试替身，不会写入真实 `.codex`、发出真实模型请求或关闭正在使用的 Codex。
+旧测试脚本已从发布目录移除，可从 Git 历史查阅；发布前曾在临时目录验证真实 SQLite/JSONL 迁移、完整恢复、失败回退、令牌轮换与同步、重启顺序、等待取消、仅 auth 配置生成与中断恢复。网络和桌面关闭/启动使用测试替身，不会写入真实 `.codex`、发出真实模型请求或关闭正在使用的 Codex。
 
 静态界面使用本地 Lucide 图标（ISC 许可），无需联网加载界面资源。启动服务后端仅使用 Python 标准库。

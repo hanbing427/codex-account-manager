@@ -125,9 +125,9 @@ sh deploy.sh
 
 | 操作 | Windows | macOS / Linux |
 | --- | --- | --- |
-| 日常启动 | 桌面快捷方式或 `Start-Web.vbs` | 桌面入口或 `sh start-web.sh` |
-| 显示启动信息 | `Start-Web.cmd` | `sh start-web.sh --no-browser` |
-| 停止后台服务 | 网页“关闭服务”或 `Stop-Web.cmd` | 网页“关闭服务”或 `sh start-web.sh --stop` |
+| 日常启动 | 桌面快捷方式或 `scripts/Start-Web.vbs` | 桌面入口或 `sh scripts/start-web.sh` |
+| 显示启动信息 | `scripts/Start-Web.cmd` | `sh scripts/start-web.sh --no-browser` |
+| 停止后台服务 | 网页“关闭服务”或 `scripts/Stop-Web.cmd` | 网页“关闭服务”或 `sh scripts/start-web.sh --stop` |
 
 关闭浏览器不会停止后台服务；切换或维护正在写入时，请等完成后再停止。
 
@@ -135,7 +135,7 @@ sh deploy.sh
 
 ## 6. 数据位置与常见问题
 
-默认数据根目录为当前用户的 `~/.codex`；可通过 `CODEX_HOME` 环境变量覆盖，或使用 `python launcher.py --home "实际路径"` 指定。
+默认数据根目录为当前用户的 `~/.codex`；可通过 `CODEX_HOME` 环境变量覆盖，或使用 `python app/launcher.py --home "实际路径"` 指定。
 
 | 相对于数据根目录的路径 | 内容 |
 | --- | --- |
@@ -157,16 +157,30 @@ sh deploy.sh
 
 请勿将 `.codex`、账号包、备份、迁移计划或运行状态文件提交到公开仓库。本仓库只分发程序，不附带个人配置或对话。项目目录导出可能包含 `.env` 等文件，分享前请检查。
 
-## 7. 开发与详细文档
+## 7. 目录结构
 
-```sh
-python -m unittest discover -v
-python webui.py --no-browser
+```text
+codex-account-manager/
+├── README.md          # 快速开始、功能和使用教程
+├── Deploy.cmd         # Windows 一键部署
+├── Deploy.command     # macOS 一键部署
+├── deploy.sh          # Linux 一键部署
+├── app/               # Python 程序；ui/ 存放网页和图标
+├── scripts/           # 启动、停止、快捷方式与原迁移 CLI 入口
+└── docs/              # 详细部署和维护文档
 ```
 
-测试使用临时文件与模拟网络/桌面操作，不会切换真实账号或发送真实模型请求。前台调试前请先停止已有后台服务。
+日常使用桌面快捷方式即可。请整体移动或更新文件夹，不要单独复制入口脚本。`local/` 如存在，仅用于保留本机旧迁移计划等资料，不上传 GitHub、不随压缩包分发。账号和备份仍保存在各用户的 Codex 数据目录。
 
-- [详细部署、原 Provider 迁移 CLI 和回退说明](ADVANCED.md)
-- [网页操作与 OAuth 维护细节](WEB-README.md)
+## 8. 开发与详细文档
 
-图标使用本地 Lucide 资源，许可见 [ui/LICENSE-lucide](ui/LICENSE-lucide)。
+```sh
+python app/webui.py --no-browser
+```
+
+发布目录只保留运行所需文件，旧测试脚本已移除（可从 Git 历史查阅）。前台调试前请先停止已有后台服务。
+
+- [详细部署、原 Provider 迁移 CLI 和回退说明](docs/ADVANCED.md)
+- [网页操作与 OAuth 维护细节](docs/WEB-README.md)
+
+图标使用本地 Lucide 资源，许可见 [ui/LICENSE-lucide](app/ui/LICENSE-lucide)。

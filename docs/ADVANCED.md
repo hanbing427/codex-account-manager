@@ -1,3 +1,5 @@
+> 本文所有命令均在项目根目录执行；首次使用请先看 [快速开始](../README.md)。
+
 # Codex 对话 Provider 迁移工具
 
 ## 网页版：后台运行与跨平台迁移
@@ -6,42 +8,42 @@
 
 ### Windows
 
-1. 双击 `Install-Shortcut.cmd`，桌面会生成带图标的 **Codex Account Manager** 快捷方式。
-2. 点击桌面快捷方式：自动在后台启动服务并打开网页，没有常驻终端窗口。也可以直接双击 `Start-Web.vbs`。
+1. 双击 `scripts/Install-Shortcut.cmd`，桌面会生成带图标的 **Codex Account Manager** 快捷方式。
+2. 点击桌面快捷方式：自动在后台启动服务并打开网页，没有常驻终端窗口。也可以直接双击 `scripts/Start-Web.vbs`。
 3. 以后再点击，会复用已有后台服务，不重复启动。关闭浏览器不影响定时维护。
-4. 需要结束后台服务时，双击 `Stop-Web.cmd`。正在切换账号或维护令牌时会拒绝退出，请稍后重试。
+4. 需要结束后台服务时，双击 `scripts/Stop-Web.cmd`。正在切换账号或维护令牌时会拒绝退出，请稍后重试。
 
-启动器会寻找本机 Python 或 Codex 附带的 Python。找不到时请安装 Python 3.11+ 并加入 PATH。`Start-Web.cmd` 也可启动，短暂窗口退出后服务继续运行。
+启动器会寻找本机 Python 或 Codex 附带的 Python。找不到时请安装 Python 3.11+ 并加入 PATH。`scripts/Start-Web.cmd` 也可启动，短暂窗口退出后服务继续运行。
 
 ### macOS
 
 先安装 Python 3.11+，例如通过 python.org 安装包或 Homebrew。打开终端，在工具目录运行：
 
 ```sh
-chmod +x Start-Web.command Install-Shortcut.command start-web.sh
-./Install-Shortcut.command
+chmod +x scripts/Start-Web.command scripts/Install-Shortcut.command scripts/start-web.sh
+./scripts/Install-Shortcut.command
 ```
 
-桌面将生成 **Codex Account Manager.app**，双击即可启动后台服务并打开网页。也可以运行 `sh start-web.sh` 或双击 `Start-Web.command`。如果系统提示未受信任的下载文件，请检查来源后按 macOS 的“右键 → 打开”流程处理；不会自动绕过系统安全设置。
+桌面将生成 **Codex Account Manager.app**，双击即可启动后台服务并打开网页。也可以运行 `sh scripts/start-web.sh` 或双击 `scripts/Start-Web.command`。如果系统提示未受信任的下载文件，请检查来源后按 macOS 的“右键 → 打开”流程处理；不会自动绕过系统安全设置。
 
-默认查找 `/Applications/Codex.app`、`~/Applications/Codex.app`。只有 Codex CLI 时，在 Terminal 中启动 CLI。停止后台服务：`sh start-web.sh --stop`。
+默认查找 `/Applications/Codex.app`、`~/Applications/Codex.app`。只有 Codex CLI 时，在 Terminal 中启动 CLI。停止后台服务：`sh scripts/start-web.sh --stop`。
 
 ### Linux
 
 安装 Python 3.11+，在工具目录运行：
 
 ```sh
-sh start-web.sh --install-shortcut
-sh start-web.sh
+sh scripts/start-web.sh --install-shortcut
+sh scripts/start-web.sh
 ```
 
-会在应用菜单和桌面生成带图标的启动项。部分桌面环境需要右键 `.desktop` 文件选择“允许启动/信任”。Linux 的图形入口行为因桌面环境而异；命令行入口始终为 `sh start-web.sh`。
+会在应用菜单和桌面生成带图标的启动项。部分桌面环境需要右键 `.desktop` 文件选择“允许启动/信任”。Linux 的图形入口行为因桌面环境而异；命令行入口始终为 `sh scripts/start-web.sh`。
 
-默认通过已安装的终端模拟器打开 PATH 中的 `codex` CLI。支持 x-terminal-emulator、GNOME Terminal、Konsole、XFCE Terminal、xterm。如果使用其他 Codex 桌面构建，可将环境变量 `CODEX_DESKTOP_EXECUTABLE` 设置为该桌面程序可执行文件的绝对路径（不是 CLI），并从带此环境变量的启动入口运行。停止后台服务：`sh start-web.sh --stop`。
+默认通过已安装的终端模拟器打开 PATH 中的 `codex` CLI。支持 x-terminal-emulator、GNOME Terminal、Konsole、XFCE Terminal、xterm。如果使用其他 Codex 桌面构建，可将环境变量 `CODEX_DESKTOP_EXECUTABLE` 设置为该桌面程序可执行文件的绝对路径（不是 CLI），并从带此环境变量的启动入口运行。停止后台服务：`sh scripts/start-web.sh --stop`。
 
 ### 迁移、路径及运行边界
 
-- 只需复制完整工具目录；不用修改源码中的路径。不要同时复制旧的 `migration-plan.json`、账号数据或私人备份给其他人。发布 ZIP 只包含程序、图标、测试及文档。
+- 只需复制完整工具目录；不用修改源码中的路径。不要同时复制旧的 `migration-plan.json`、账号数据或私人备份给其他人。发布 ZIP 只包含程序、图标、启动入口及文档。
 - **移动工具目录后，重新运行快捷方式安装入口**，更新快捷方式所指向的位置。启动脚本本身使用相对路径；操作系统快捷方式必须指向实际安装位置。新启动器遇到来自旧目录的服务时，会在其空闲时停止旧服务并启动新服务。
 - 运行账户必须能访问自己的 `.codex`。可用 `--home "/path/to/codex-home"` 指定其他目录；GUI 快捷方式使用默认 `CODEX_HOME` 环境变量或 `~/.codex`。
 - 后台运行期间，默认每天执行一次已保存 OAuth 账号的维护，可在网页调整。**关闭浏览器不影响；注销、关机或主动停止后台服务后会停止。没有擅自设置开机/登录自启**，下次点击快捷方式即可恢复，到期任务会重新检查。
@@ -55,24 +57,23 @@ sh start-web.sh
 ### 开发与排错
 
 ```sh
-python3 launcher.py --no-browser       # 后台启动并打印实际 URL
-python3 launcher.py --stop             # 安全停止后台服务
-python3 webui.py --no-browser          # 前台运行，便于排错
-python3 -m unittest -v test_webui test_maintenance test_portable
+python3 app/launcher.py --no-browser       # 后台启动并打印实际 URL
+python3 app/launcher.py --stop             # 安全停止后台服务
+python3 app/webui.py --no-browser          # 前台运行，便于排错
 ```
 
 原有账号切换、定时维护的说明见 [WEB-README.md](WEB-README.md)。以下为原迁移命令行说明。
 
-新增网页账号管理界面：双击 **Start-Web.cmd**，可保存/切换账号配置、仅 auth 自动生成 config、同步会话 provider 和恢复备份。详见 [网页使用说明](WEB-README.md)。原命令行入口保持可用。
+新增网页账号管理界面：双击 **scripts/Start-Web.cmd**，可保存/切换账号配置、仅 auth 自动生成 config、同步会话 provider 和恢复备份。详见 [网页使用说明](WEB-README.md)。原命令行入口保持可用。
 
-Windows、macOS、Linux / Python 3.11 及以上 / 无需安装第三方依赖。原 `Start.cmd` 为 Windows 入口；其他平台直接运行 `python3 migrate.py`。
+Windows、macOS、Linux / Python 3.11 及以上 / 无需安装第三方依赖。原 `scripts/Start.cmd` 为 Windows 入口；其他平台直接运行 `python3 app/migrate.py`。
 
 用于切换 config 和登录方式后，把已有对话迁到新 Provider。目标 Provider 每次从实际的 `config.toml` 读取，不写死用户名、模型、旧 Provider、新 Provider、数据库版本或任务 ID。
 
 ## 最常用：双击运行
 
 1. 先切换好你要用的 `config.toml` 及对应登录凭据。重启 Codex，用**新对话成功发送一条消息**，确认目标服务可用。
-2. 双击本文件夹里的 **Start.cmd**。
+2. 双击项目根目录里的 **scripts/Start.cmd**。
 3. 查看目标 Provider 和待迁移对话列表。默认选择**所有 Provider 与目标不同的未归档对话**。
 4. 确认列表后输入 **MIGRATE**。不想执行时直接回车退出。
 5. **完全退出 Codex 桌面端、CLI 和 IDE 中运行的 Codex**，保留这个终端窗口。工具默认最多等待 60 分钟；不要与其他迁移工具同时运行。
@@ -84,38 +85,38 @@ Windows、macOS、Linux / Python 3.11 及以上 / 无需安装第三方依赖。
 
 ## 可选：命令行精确选择
 
-在本文件夹打开 PowerShell，使用下列命令。`Start.cmd` 会自动寻找 Codex 自带或本机安装的 Python。
+在项目根目录打开 PowerShell，使用下列命令。`scripts/Start.cmd` 会自动寻找 Codex 自带或本机安装的 Python。
 
 ```powershell
 # 只预览，不修改对话；输出 migration-plan.json
-.\Start.cmd plan
+.\scripts/Start.cmd plan
 
 # 只迁移指定旧 Provider；目标始终读取当前 config
-.\Start.cmd --from-provider openai
+.\scripts/Start.cmd --from-provider openai
 
 # 把归档对话也包括在内
-.\Start.cmd --include-archived
+.\scripts/Start.cmd --include-archived
 
 # 只迁移指定 ID，可重复 --id
-.\Start.cmd --id "实际的任务 UUID"
+.\scripts/Start.cmd --id "实际的任务 UUID"
 
 # 多个来源 Provider，可重复 --from-provider
-.\Start.cmd --from-provider openai --from-provider old_proxy
+.\scripts/Start.cmd --from-provider openai --from-provider old_proxy
 
 # 指定另一个 CODEX_HOME
-.\Start.cmd --home "D:\CodexHome"
+.\scripts/Start.cmd --home "D:\CodexHome"
 
 # 检测到多个 state 数据库时，明确指定实际在用的数据库
-.\Start.cmd plan --database "C:\Users\你的用户名\.codex\state_5.sqlite"
+.\scripts/Start.cmd plan --database "C:\Users\你的用户名\.codex\state_5.sqlite"
 
 # 应用已经检查过的预览计划，等待退出后执行
-.\Start.cmd apply --plan ".\migration-plan.json" --wait
+.\scripts/Start.cmd apply --plan ".\migration-plan.json" --wait
 
 # 等待退出的时限改为 120 分钟
-.\Start.cmd --timeout-minutes 120
+.\scripts/Start.cmd --timeout-minutes 120
 ```
 
-`apply` 是明确的执行命令，不再二次提问。不带 `--wait` 时，Codex 仍运行便停止。直接运行 Python 或 `start.ps1` 也支持这些参数。
+`apply` 是明确的执行命令，不再二次提问。不带 `--wait` 时，Codex 仍运行便停止。直接运行 Python 或 `scripts/start.ps1` 也支持这些参数。
 
 ## 备份和回退
 
@@ -130,7 +131,7 @@ Windows、macOS、Linux / Python 3.11 及以上 / 无需安装第三方依赖。
 回退示例：
 
 ```powershell
-.\Start.cmd rollback --backup "C:\Users\你的用户名\.codex\provider-migration-backups\实际备份目录" --wait
+.\scripts/Start.cmd rollback --backup "C:\Users\你的用户名\.codex\provider-migration-backups\实际备份目录" --wait
 ```
 
 回退只恢复这次迁移的会话文件和数据库 Provider 字段，**不会整体覆盖当前数据库或恢复全局 config**。回退前还会保存当前状态。若迁移后这些会话有新消息、路径或归档状态变化，自动回退会拒绝执行，以免覆盖新内容。此时应重新切换到希望使用的 config，再生成一次反方向迁移计划。
@@ -154,8 +155,8 @@ Windows、macOS、Linux / Python 3.11 及以上 / 无需安装第三方依赖。
 
 ## 文件说明
 
-- `Start.cmd`：双击入口，运行结束后保留窗口。
-- `start.ps1`：自动寻找 Python，转发命令行参数。
+- `scripts/Start.cmd`：双击入口，运行结束后保留窗口。
+- `scripts/start.ps1`：自动寻找 Python，转发命令行参数。
 - `migrate.py`：预览、迁移、校验和回退逻辑。
 - `migration-plan.json`：运行预览后生成，包含任务 ID、标题和文件哈希，不要公开分享。
 
