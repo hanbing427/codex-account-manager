@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="csrf-token" content="__CSRF_TOKEN__">
+  <link rel="icon" href="/account-manager.svg" type="image/svg+xml"><title>Codex Account Manager</title>
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/tech.css">
+  <script src="/lucide.js" defer></script>
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <aside>
+    <div class="brand"><div class="brand-mark"><img src="/account-manager.svg" width="44" height="44" alt=""></div><span>Codex <small>ACCOUNT MANAGER</small></span></div>
+    <nav aria-label="主导航">
+      <button class="nav active" data-tab="accounts"><i data-lucide="users"></i>账号配置<span id="nav-count">0</span></button>
+      <button class="nav" data-tab="backups"><i data-lucide="history"></i>备份记录</button>
+      <button class="nav" data-tab="conversations"><i data-lucide="messages-square"></i>对话迁移</button>
+      <button class="nav" data-tab="maintenance"><i data-lucide="heart-pulse"></i>凭证维护</button>
+    </nav>
+    <div class="aside-bottom"><span class="dot"></span> 本机服务 <span class="local">ONLINE</span></div>
+  </aside>
+  <div class="workspace">
+    <header><span>工作区 <span class="slash">/</span> <b id="breadcrumb">账号配置</b></span><div class="header-actions"><button id="refresh" class="icon" title="刷新" aria-label="刷新"><i data-lucide="refresh-cw"></i></button><button id="shutdown" class="icon danger" title="关闭账号管理器服务" aria-label="关闭账号管理器服务"><i data-lucide="power"></i></button><span class="private"><i data-lucide="shield-check"></i>仅本机访问</span></div></header>
+    <main>
+      <section class="page-title"><div><div class="eyebrow"><span class="eyebrow-line"></span>CODEX WORKSPACE</div><h1 id="heading">账号配置</h1></div><button id="launch" class="secondary"><i data-lucide="power"></i>启动 Codex</button></section>
+      <section class="current" aria-label="当前配置">
+        <div class="current-main"><span class="current-icon"><i data-lucide="fingerprint"></i></span><div><div class="label">当前生效配置</div><h2 id="current-name">正在读取</h2><div id="home" class="path"></div></div></div>
+        <dl><div><dt>PROVIDER</dt><dd id="current-provider">—</dd></div><div><dt>MODEL</dt><dd id="current-model">—</dd></div><div><dt>文件状态</dt><dd id="current-files">—</dd></div></dl><p id="current-save-status" class="current-save-status"></p>
+      </section>
+      <section id="onboarding" class="onboarding" hidden><i data-lucide="bookmark-plus"></i><div><b>首次使用建议保存当前配置</b><p id="onboarding-text">当前配置会自动保留，但还没有一个便于识别的名称。</p></div><button id="save-current" class="primary"><i data-lucide="save"></i>命名并保存</button></section>
+      <section id="job" class="notice" role="status" hidden><i data-lucide="loader-circle"></i><div><b id="job-title"></b><p id="job-message"></p></div><button id="cancel" class="secondary" hidden>取消等待</button></section>
+      <div id="accounts-view">
+        <section class="section-toolbar"><div><h2>已保存的账号 <span id="profile-count" class="count">0</span></h2></div><div class="actions"><button id="export" class="secondary"><i data-lucide="download"></i>一键导出</button><button id="capture" class="secondary"><i data-lucide="bookmark-plus"></i>保存当前配置</button><button id="import" class="primary"><i data-lucide="plus"></i>添加账号</button></div></section>
+        <div id="profiles" class="profiles"><div class="empty">正在读取账号配置…</div></div>
+        <section id="discovery-section" class="discovery"><div class="section-toolbar"><h2>本机配置文件</h2><span id="discovery-count" class="muted"></span></div><div id="candidates" class="file-list"></div></section>
+      </div>
+      <div id="backups-view" hidden><section class="section-toolbar"><h2>全部切换备份 <span id="backup-count" class="count">0</span></h2><p>显示所有切换备份，不自动清理。删除会同时移除关联的会话迁移备份，无法撤销；待恢复记录不可删除。配置编辑前的旧版本另存于 profile-revisions。</p><code id="backup-path"></code><div class="backup-actions"><label class="check-label"><input id="backup-select-all" type="checkbox">全选可删除备份</label><span id="backup-selected-count">已选 0 条</span><button id="backup-delete-selected" class="secondary danger" disabled>删除所选备份</button></div></section><div id="backups" class="file-list"></div></div>
+      <div id="conversations-view" hidden>
+        <button id="conversation-recover" class="secondary danger" hidden>恢复中断的导入并重启 Codex</button>
+        <section class="section-toolbar"><h2>对话迁移 <span id="conversation-count" class="count">0</span></h2><div class="actions"><button id="conversation-import" class="secondary"><i data-lucide="upload"></i>导入对话</button><button id="conversation-refresh" class="secondary">刷新列表</button></div></section>
+        <p class="form-note">包含普通和已归档对话的原始记录及本地上下文。全部与部分对话导出均包含相关生成文件、聊天历史及分组信息；只有“导出整个项目”才打包全部项目目录。建议先停止生成，避免遗漏最新内容。导入时跳过已有会话，可指定本机项目路径。</p>
+        <div class="conversation-controls"><input id="conversation-search" type="search" placeholder="搜索标题、对话 ID 或项目路径" aria-label="搜索对话"><select id="conversation-filter" aria-label="归档筛选"><option value="all">全部对话</option><option value="active">未归档</option><option value="archived">已归档</option></select></div>
+        <div class="conversation-controls project-export-controls"><select id="conversation-project" aria-label="选择导出的项目"><option value="">选择项目</option></select><button id="conversation-export-project" class="secondary">导出整个项目</button></div>
+        <div class="backup-actions"><label class="check-label"><input id="conversation-select-all" type="checkbox">全选筛选结果</label><span id="conversation-selected-count">已选 0 条</span><button id="conversation-export-selected" class="secondary" disabled>导出所选</button><button id="conversation-export-all" class="primary">完整备份全部对话</button></div>
+        <p id="conversation-status" role="status"></p><p id="conversation-warning" class="warning"></p><div id="conversation-list" class="file-list"><div class="empty">打开模块后加载对话</div></div>
+      </div>
+      <div id="maintenance-view" hidden>
+        <section class="section-toolbar"><h2>定时维护</h2><span id="maintenance-running" class="muted"></span></section>
+        <form id="maintenance-form" class="maintenance-settings">
+          <label class="check-label"><input type="checkbox" id="maintenance-enabled">启用 OAuth 定时维护</label>
+          <div class="settings-grid"><label>间隔（分钟）<input type="number" id="maintenance-interval" min="5" max="10080" step="1" required><small id="interval-summary" class="muted"></small></label><label>探测模型<input id="maintenance-model" maxlength="128" placeholder="留空使用账号配置中的 model"></label></div>
+          <label class="check-label"><input type="checkbox" id="maintenance-probe">发送短消息探测（使用少量账号额度）</label>
+          <p class="muted">探测消息：Reply with OK. · 网页服务运行期间生效</p>
+          <div class="actions"><button class="primary" id="maintenance-save" type="submit"><i data-lucide="save"></i>保存设置</button></div>
+        </form>
+        <section class="section-toolbar"><h2>OAuth 账号状态</h2></section><div id="maintenance-accounts" class="file-list"></div>
+      </div>
+      <footer><span><i data-lucide="folder-lock"></i><span id="footer-path">本机账号存储</span></span><span>Codex Account Manager <b>v1.2</b></span></footer>
+    </main>
+  </div>
+  <dialog id="editor"><form id="editor-form"><div class="dialog-head"><h2 id="editor-title">添加账号</h2><button type="button" class="icon close" title="关闭" aria-label="关闭"><i data-lucide="x"></i></button></div><label>账号名称<input id="name" maxlength="80" required placeholder="例如：工作账号"></label><div id="file-fields"><label class="file-field"><span><i data-lucide="key-round"></i>auth.json <b>必选</b></span><input type="file" id="auth-file" accept=".json,application/json"></label><label class="file-field"><span><i data-lucide="file-code-2"></i>config.toml <b>可选</b></span><input type="file" id="config-file" accept=".toml"></label><div class="form-note">未提供 config.toml：自动生成官方 OpenAI 默认配置。第三方服务请同时提供配置文件。</div></div><p id="editor-error" class="error" role="alert"></p><div class="dialog-actions"><button type="button" class="secondary close">取消</button><button class="primary" id="save">保存账号</button></div></form></dialog>
+  <dialog id="confirm"><div class="dialog-head"><h2 id="confirm-title">切换账号</h2><button class="icon close" title="关闭" aria-label="关闭"><i data-lucide="x"></i></button></div><div id="confirm-content"></div><p id="confirm-error" class="error" role="alert"></p><div class="dialog-actions"><button class="secondary close">取消</button><button id="confirm-go" class="primary">切换账号</button></div></dialog>
+  <dialog id="conversation-import-dialog"><form id="conversation-import-form"><div class="dialog-heading"><h2>导入对话</h2><button type="button" class="icon close" aria-label="关闭">×</button></div><label>选择本软件导出的对话 ZIP（最大 8 GB）<input id="conversation-import-file" type="file" accept=".zip,application/zip"></label><p class="form-note">先预览并勾选对话，再确认导入。同一 ID 的已有对话会跳过；不会覆盖本机数据库。旧版导出包仅包含对话，没有文档附件。</p><label id="conversation-import-destination-field" hidden>迁移文件存放目录（本机已有文件夹的完整路径）<input id="conversation-import-destination" placeholder="例如 D:\Codex-Migrations 或 /home/me/imports"><small>会在此目录创建独立迁移文件夹，保留项目相对结构，不覆盖已有文件。</small></label><label id="conversation-import-cwd-field">旧版包的本机项目目录（旧路径不可用时必填）<input id="conversation-import-cwd" placeholder="例如 D:\Projects\my-project 或 /home/me/project"></label><p class="form-note">新版包会自动分配各项目的本机目录；旧版包可用此处指定新的工作目录。</p><label class="check-label"><input id="conversation-import-all" type="checkbox">全选可导入对话</label><div id="conversation-import-list" class="preview-list"></div><p id="conversation-import-status" role="status"></p><p class="warning">导入前会备份数据库并关闭 Codex，导入后重新启动；正在执行的任务会中断。会话 provider 会适配当前账号，继续对话时历史内容将发送给当前 provider。</p><div class="dialog-actions"><button type="button" class="secondary close">取消</button><button id="conversation-import-go" class="primary" disabled>导入所选并重启 Codex</button></div></form></dialog>
+  <dialog id="conversation-export-preview"><div class="dialog-heading"><h2>确认迁移范围</h2><button type="button" class="icon close" aria-label="关闭">×</button></div><p id="conversation-export-summary"></p><p class="form-note">对话导出带上识别到的本地引用文件；项目导出包含整个项目目录。以下是将打包的文件，未识别的生成文件可手动补充。分组、置顶和归档状态也会打包。项目文件可能包含环境配置和密钥。</p><label>补充文件（每行一个本机完整文件路径）<textarea id="conversation-extra-files" rows="3" placeholder="D:\Documents\report.docx"></textarea></label><button id="conversation-export-rescan" class="secondary">重新检查文件范围</button><div id="conversation-export-files" class="preview-list"></div><p id="conversation-export-warning" class="warning"></p><p id="conversation-export-error" class="error"></p><div class="dialog-actions"><button class="secondary close">取消</button><button id="conversation-export-save" class="primary" disabled>选择位置并导出</button></div></dialog>
+  <div id="toast" role="status" hidden></div>
+<dialog id="details"><form id="details-form">
+<div class="dialog-heading"><h2 id="details-title">配置文件</h2><button type="button" class="icon close" aria-label="关闭">×</button></div>
+<p class="form-note">这里编辑管理器保存的配置副本。保存后，使用“更新并重启”应用到 Codex。auth 包含登录凭据，请勿分享。</p>
+
+<p id="detail-path" class="path"></p><button type="button" class="secondary" id="reveal-profile">打开文件夹</button>
+<label for="detail-auth">auth.json</label><textarea id="detail-auth" spellcheck="false" autocomplete="off" required></textarea>
+<label for="detail-config">config.toml（留空：切换时重新生成默认配置）</label><textarea id="detail-config" spellcheck="false" autocomplete="off"></textarea>
+<p class="warning">更新并重启会应用这份配置、关闭并重新启动 Codex，正在进行的任务会中断。</p>
+<p id="detail-error" class="error"></p><div class="dialog-actions"><button type="submit" class="secondary" id="detail-save">保存副本</button><button type="button" class="primary" id="detail-update">更新并重启 Codex</button></div>
+</form></dialog><dialog id="appearance"><form id="appearance-form"><div class="dialog-heading"><h2 id="appearance-title">图标颜色</h2><button type="button" class="icon close" aria-label="关闭">×</button></div><p class="form-note">只更改账号图标的颜色，无需更新配置或重启 Codex。</p><div class="appearance-controls"><span id="appearance-preview"><i data-lucide="palette"></i></span><label for="appearance-color">选择颜色</label><input type="color" id="appearance-color" value="#79dfbb"></div><p id="appearance-error" class="error"></p><div class="dialog-actions"><button type="button" class="secondary close">取消</button><button id="appearance-save" class="primary" type="submit">保存颜色</button></div></form></dialog></body>
+</html>
