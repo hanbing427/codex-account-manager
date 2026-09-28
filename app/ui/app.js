@@ -5,6 +5,44 @@ let state, editorMode = 'import', editingId, selectedId, confirmMode, toastTimer
 const icons = () => window.lucide?.createIcons();
 const esc = text => String(text ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const icon = name => `<i data-lucide="${name}"></i>`;
+let loginTimer, loginRequest = false;
+function showLoginStatus(result) {
+  if (result.state === 'idle' && $('#login-status').textContent) return;
+  $('#login-status').textContent = result.message || '';
+  $('#login-start').disabled = ['waiting', 'ready'].includes(result.state);
+  $('#login-name').disabled = ['waiting', 'ready'].includes(result.state);
+  $('#login-save').hidden = result.state !== 'ready';
+}
+async function pollLogin() {
+  if (loginRequest || !$('#login-dialog').open) return;
+  loginRequest = true;
+  try { showLoginStatus(await api('login/status', {})); }
+  catch(e) { $('#login-status').textContent = e.message; }
+  finally { loginRequest = false; }
+}
+$('#chatgpt-login').onclick = () => {
+  $('#login-status').textContent = '';
+  $('#login-dialog').showModal(); pollLogin();
+  clearInterval(loginTimer); loginTimer = setInterval(pollLogin, 1500);
+};
+$('#login-form').onsubmit = async e => {
+  e.preventDefault(); $('#login-start').disabled = true;
+  try { showLoginStatus(await api('login/start', {name:$('#login-name').value})); }
+  catch(e) { $('#login-status').textContent = e.message; $('#login-start').disabled = false; }
+};
+$('#login-save').onclick = async () => {
+  $('#login-save').disabled = true;
+  try {
+    clearInterval(loginTimer);
+    await api('login/finish', {}); $('#login-dialog').close();
+    toast('ChatGPT 账号已保存，可在账号列表切换'); await refresh();
+  } catch(e) { $('#login-status').textContent = e.message; }
+  finally { $('#login-save').disabled = false; }
+};
+$('#login-dialog').addEventListener('close', () => {
+  clearInterval(loginTimer);
+  api('login/cancel', {}).catch(e => toast(e.message));
+});
 async function api(path, data) {
   const response = await fetch('/api/' + path, {method: data === undefined ? 'GET' : 'POST', headers: {'Content-Type':'application/json','X-CSRF-Token':token}, body: data === undefined ? undefined : JSON.stringify(data)});
   const result = await response.json();

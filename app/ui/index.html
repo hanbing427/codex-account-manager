@@ -32,6 +32,7 @@
       <section id="onboarding" class="onboarding" hidden><i data-lucide="bookmark-plus"></i><div><b>首次使用建议保存当前配置</b><p id="onboarding-text">当前配置会自动保留，但还没有一个便于识别的名称。</p></div><button id="save-current" class="primary"><i data-lucide="save"></i>命名并保存</button></section>
       <section id="job" class="notice" role="status" hidden><i data-lucide="loader-circle"></i><div><b id="job-title"></b><p id="job-message"></p></div><button id="cancel" class="secondary" hidden>取消等待</button></section>
       <div id="accounts-view">
+        <button id="chatgpt-login" class="secondary"><i data-lucide="log-in"></i>ChatGPT 登录</button>
         <section class="section-toolbar"><div><h2>已保存的账号 <span id="profile-count" class="count">0</span></h2></div><div class="actions"><button id="export" class="secondary"><i data-lucide="download"></i>一键导出</button><button id="capture" class="secondary"><i data-lucide="bookmark-plus"></i>保存当前配置</button><button id="import" class="primary"><i data-lucide="plus"></i>添加账号</button></div></section>
         <div id="profiles" class="profiles"><div class="empty">正在读取账号配置…</div></div>
         <section id="discovery-section" class="discovery"><div class="section-toolbar"><h2>本机配置文件</h2><span id="discovery-count" class="muted"></span></div><div id="candidates" class="file-list"></div></section>
@@ -74,5 +75,11 @@
 <label for="detail-config">config.toml（留空：切换时重新生成默认配置）</label><textarea id="detail-config" spellcheck="false" autocomplete="off"></textarea>
 <p class="warning">更新并重启会应用这份配置、关闭并重新启动 Codex，正在进行的任务会中断。</p>
 <p id="detail-error" class="error"></p><div class="dialog-actions"><button type="submit" class="secondary" id="detail-save">保存副本</button><button type="button" class="primary" id="detail-update">更新并重启 Codex</button></div>
-</form></dialog><dialog id="appearance"><form id="appearance-form"><div class="dialog-heading"><h2 id="appearance-title">图标颜色</h2><button type="button" class="icon close" aria-label="关闭">×</button></div><p class="form-note">只更改账号图标的颜色，无需更新配置或重启 Codex。</p><div class="appearance-controls"><span id="appearance-preview"><i data-lucide="palette"></i></span><label for="appearance-color">选择颜色</label><input type="color" id="appearance-color" value="#79dfbb"></div><p id="appearance-error" class="error"></p><div class="dialog-actions"><button type="button" class="secondary close">取消</button><button id="appearance-save" class="primary" type="submit">保存颜色</button></div></form></dialog></body>
-</html>
+</form></dialog><dialog id="appearance"><form id="appearance-form"><div class="dialog-heading"><h2 id="appearance-title">图标颜色</h2><button type="button" class="icon close" aria-label="关闭">×</button></div><p class="form-note">只更改账号图标的颜色，无需更新配置或重启 Codex。</p><div class="appearance-controls"><span id="appearance-preview"><i data-lucide="palette"></i></span><label for="appearance-color">选择颜色</label><input type="color" id="appearance-color" value="#79dfbb"></div><p id="appearance-error" class="error"></p><div class="dialog-actions"><button type="button" class="secondary close">取消</button><button id="appearance-save" class="primary" type="submit">保存颜色</button></div></form></dialog>
+<dialog id="login-dialog"><form id="login-form">
+<div class="dialog-heading"><h2>登录 ChatGPT 账号</h2><button type="button" class="icon close" aria-label="关闭"><i data-lucide="x"></i></button></div>
+<label>账号名称<input id="login-name" required maxlength="80" autocomplete="off" placeholder="例如：个人账号"></label>
+<p id="login-status" role="status"></p>
+<div class="dialog-actions"><button type="button" class="secondary close">取消</button><button id="login-start" type="submit" class="primary">前往官方登录</button><button id="login-save" type="button" class="primary" hidden>保存账号</button></div>
+</form></dialog>
+</body></html>

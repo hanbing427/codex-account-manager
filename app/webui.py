@@ -107,6 +107,9 @@ def config_key(raw):
         return hashlib.sha256(raw).hexdigest()
 
 
+from account_login import AccountLogin
+
+
 class Manager:
     def __init__(self, root):
         self.root = Path(root).resolve()
@@ -132,6 +135,7 @@ class Manager:
                 self.job = {'state': 'error', 'message': '上次操作被中断，请检查备份记录和当前配置。'}
         self.cancel = threading.Event()
         self.keeper = Keeper(self)
+        self.login = AccountLogin(self)
         # Keep a recoverable snapshot even when the first page visit happens
         # before the user has chosen a display name.
         if (self.root / 'auth.json').exists():
@@ -764,7 +768,15 @@ class Handler(BaseHTTPRequestHandler):
             m.require(isinstance(data, dict), '无效请求。')
             manager = self.server.manager
             with manager.mutex:
-                if self.path == '/api/conversations/import':
+                if self.path == '/api/login/start':
+                    result = manager.login.start(data.get('name'))
+                elif self.path == '/api/login/status':
+                    result = manager.login.status()
+                elif self.path == '/api/login/finish':
+                    result = manager.login.finish()
+                elif self.path == '/api/login/cancel':
+                    result = manager.login.cancel()
+                elif self.path == '/api/conversations/import':
                     result = manager.start_job('import-conversations', data)
                 elif self.path == '/api/conversations/recover':
                     result = manager.start_job('recover-conversations', data)
@@ -859,6 +871,7 @@ class Handler(BaseHTTPRequestHandler):
                     result = manager.keeper.request(data.get('id'))
                 elif self.path == '/api/shutdown':
                     manager.ensure_ready()
+                    manager.login.cancel()
                     manager.keeper.stop.set()
                     result = {'ok': True}
                     threading.Thread(target=self.server.shutdown, daemon=True).start()
@@ -909,6 +922,7 @@ def serve(args, manager):
         pass
     finally:
         manager.keeper.stop.set()
+        manager.login.cancel()
         server.server_close()
         runtime_file.unlink(missing_ok=True)
 
