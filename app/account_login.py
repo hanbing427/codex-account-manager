@@ -2,11 +2,13 @@
 import os
 from pathlib import Path
 import shutil
+import signal
 import subprocess
 import tempfile
 import time
 
 import migrate as m
+from cli_resolver import resolve_cli
 
 
 class AccountLogin:
@@ -15,13 +17,14 @@ class AccountLogin:
         self.process = None
         self.folder = None
         self.deadline = 0
+        self.wrapper = False
 
     def start(self, name):
         self.manager.ensure_ready()
         m.require(isinstance(name, str) and 0 < len(name.strip()) <= 80, '请输入 1–80 字的账号名称。')
         m.require(self.folder is None, '已有登录正在进行，请先保存或取消。')
-        executable = shutil.which('codex.exe' if os.name == 'nt' else 'codex')
-        m.require(executable, '未找到 Codex CLI，请安装官方 Codex CLI 并加入 PATH，然后重启本服务。')
+        command = resolve_cli()
+        self.wrapper = len(command) > 1
         self.name = name.strip()
         self.folder = Path(tempfile.mkdtemp(prefix='browser-login-', dir=self.manager.store))
         try:
@@ -30,8 +33,9 @@ class AccountLogin:
             env = {k: v for k, v in os.environ.items() if k not in
                    ('OPENAI_API_KEY', 'OPENAI_BASE_URL', 'CODEX_ACCESS_TOKEN')}
             env['CODEX_HOME'] = str(self.folder)
-            self.process = subprocess.Popen([executable, 'login'], cwd=self.folder, env=env,
+            self.process = subprocess.Popen([*command, 'login'], cwd=self.folder, env=env,
                 stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                start_new_session=os.name != 'nt',
                 creationflags=subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0)
             self.deadline = time.monotonic() + 600
         except Exception:
@@ -66,7 +70,20 @@ class AccountLogin:
     def cancel(self):
         if self.process is not None:
             if self.process.poll() is None:
-                self.process.terminate()
+                # npm's Node launcher owns a native CLI child. Stop that login
+                # tree as well so cancellation releases the OAuth callback port.
+                if self.wrapper:
+                    if os.name == 'nt':
+                        subprocess.run(['taskkill.exe', '/PID', str(self.process.pid), '/T', '/F'],
+                            stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                            timeout=5, creationflags=subprocess.CREATE_NO_WINDOW)
+                    else:
+                        try:
+                            os.killpg(self.process.pid, signal.SIGTERM)
+                        except ProcessLookupError:
+                            pass
+                if self.process.poll() is None:
+                    self.process.terminate()
                 try:
                     self.process.wait(timeout=3)
                 except subprocess.TimeoutExpired:

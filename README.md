@@ -61,11 +61,49 @@ sh deploy.sh
 
 账号配置页面点击 **ChatGPT 登录**，填写账号名称并点击 **前往官方登录**。系统浏览器会打开 OpenAI 官方授权页，在该页面输入邮箱、密码和所需验证码（也支持官方提供的其他登录方式）。授权成功后回到管理器点击 **保存账号**，即可在列表中切换，无需手动导入 auth.json。
 
-需要安装官方 Codex CLI 并加入 PATH；安装后重启管理器服务。登录使用独立临时目录，不覆盖当前正在使用的 auth/config，不会重启 Codex。取消或保存后清理临时文件。重新登录相同账号会更新匹配配置的凭据。密码不会经过或保存在管理器里。若浏览器没有打开，检查系统默认浏览器设置后重试；网络失败或本机 1455 回调端口被占用也会导致失败。
+需要本机有可用的官方 Codex CLI。新版会检查 PATH、常见安装目录，以及可识别的桌面版内置 CLI；Windows 也支持 npm 的 `codex.cmd` 入口。安装后请停止并重新启动管理器服务，单独刷新网页不会更新后台进程的环境变量。登录使用独立临时目录，不覆盖当前正在使用的 auth/config，不会重启 Codex。取消或保存后清理临时文件。重新登录相同账号会更新匹配配置的凭据。密码不会经过或保存在管理器里。若浏览器没有打开，检查系统默认浏览器设置后重试；网络失败或本机 1455 回调端口被占用也会导致失败。
 
 官方登录方式参考：[Codex Authentication](https://learn.chatgpt.com/docs/auth)。
 
 **登录并保存账号不会迁移对话，也不会切换当前账号。** 保存后，在账号卡片点击“切换到此账号 → 切换并重启 Codex”，才会同步旧对话的 provider，继续使用本机保存的历史和上下文。需要包含归档对话时，请勾选对应选项。此功能不会导入 ChatGPT 网页版的聊天记录。
+
+### 提示“未找到 Codex CLI”怎么办？
+
+先下载新版管理器，修复旧版 Windows 仅识别 `codex.exe`、漏掉 npm 安装的 `codex.cmd` 的问题。如果另一台电脑确实没装 CLI，按以下步骤操作。仅安装桌面版不保证后台服务能找到 CLI。
+
+**Windows（PowerShell）**，使用官方独立安装脚本，不需要先安装 Node.js：
+
+```powershell
+irm https://chatgpt.com/codex/install.ps1 | iex
+```
+
+完成后关闭终端，重新打开 PowerShell，验证：
+
+```powershell
+codex --version
+Get-Command codex
+```
+
+**macOS / Linux（终端）**：
+
+```sh
+curl -fsSL https://chatgpt.com/codex/install.sh | sh
+# 安装完成后重新打开终端
+codex --version
+```
+
+已有 Node.js/npm 的电脑也可使用 `npm install -g @openai/codex`（Windows PowerShell 可写 `npm.cmd install -g @openai/codex`）。官方说明见 [CLI 安装](https://learn.chatgpt.com/docs/codex/cli) 和 [安装目录](https://learn.chatgpt.com/docs/config-file/environment-variables)。
+
+验证有版本号后，在项目目录执行 `scripts/Stop-Web.cmd`（Windows）或 `sh scripts/start-web.sh --stop`（macOS/Linux），再运行对应系统的 Deploy 入口，回到网页重试“ChatGPT 登录”。这只重启账号管理器，不会退出 Codex。
+
+自定义安装位置可设置本工具的 `CODEX_CLI_EXECUTABLE` 为 CLI 文件完整路径。Windows 示例（先停止后台服务，在项目根目录运行）：
+
+```powershell
+$env:CODEX_CLI_EXECUTABLE = 'D:\Tools\Codex\codex.exe'
+.\Deploy.cmd
+```
+
+这个变量指向命令行程序，不是 `ChatGPT.exe` / 桌面启动程序。Windows 的 CLI 应安装在 Windows 中；仅在 WSL 里安装不能供 Windows 后台服务直接调用。若不想安装 CLI，也可沿用“添加账号”导入已有 auth.json，文件导入和账号切换不依赖浏览器登录功能。
 
 ### 导入文件、保存当前账号与切换
 

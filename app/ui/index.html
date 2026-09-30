@@ -79,6 +79,7 @@
 <dialog id="login-dialog"><form id="login-form">
 <div class="dialog-heading"><h2>登录 ChatGPT 账号</h2><button type="button" class="icon close" aria-label="关闭"><i data-lucide="x"></i></button></div>
 <label>账号名称<input id="login-name" required maxlength="80" autocomplete="off" placeholder="例如：个人账号"></label>
+<p class="form-note">通过本机 Codex CLI 打开官方登录页。若提示未找到 CLI，请<a href="https://github.com/hanbing427/codex-account-manager#提示未找到-codex-cli怎么办" target="_blank" rel="noopener noreferrer">查看安装与排错步骤</a>，安装后停止并重新启动管理器。</p>
 <p id="login-status" role="status"></p>
 <div class="dialog-actions"><button type="button" class="secondary close">取消</button><button id="login-start" type="submit" class="primary">前往官方登录</button><button id="login-save" type="button" class="primary" hidden>保存账号</button></div>
 </form></dialog>
