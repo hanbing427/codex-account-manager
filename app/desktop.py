@@ -1,5 +1,6 @@
 """Desktop lifecycle and CLI launch fallbacks for Windows, macOS and Linux."""
 import json
+import base64
 import os
 from pathlib import Path
 import shlex
@@ -12,9 +13,6 @@ import time
 import migrate as m
 import portable
 
-DESKTOP_FILTER = "($_.Name -eq 'ChatGPT.exe' -or $_.Name -eq 'Codex.exe') -and $_.ExecutablePath -like '*OpenAI.Codex*'"
-
-
 def powershell(command):
     return subprocess.run(['powershell.exe', '-NoProfile', '-NonInteractive', '-Command', command],
                           capture_output=True, text=True, check=True, creationflags=subprocess.CREATE_NO_WINDOW)
@@ -23,22 +21,41 @@ def powershell(command):
 def close_desktop(cancel):
     if os.name != 'nt':
         return close_posix(cancel)
-    command = ("Get-CimInstance Win32_Process | Where-Object { " + DESKTOP_FILTER + " } | ForEach-Object { "
-               "$p = Get-Process -Id $_.ProcessId -ErrorAction SilentlyContinue; "
-               "if ($p -and $p.MainWindowHandle -ne 0) { [void]$p.CloseMainWindow() } }")
-    powershell(command)
+    snapshot = portable.processes()
+    selected = {p['pid']: p for p in snapshot if portable.is_desktop(p.get('executable'))}
+    # Capture descendants before closing the window: a detached child may
+    # otherwise survive after its original parent has already disappeared.
+    while True:
+        children = {p['pid']: p for p in snapshot if p['parent'] in selected
+                    and int(p.get('created') or 0) >= int(selected[p['parent']].get('created') or 0)}
+        if children.keys() <= selected.keys():
+            break
+        selected.update(children)
+    targets = [p for p in selected.values() if p.get('executable') and p['pid'] != os.getpid()]
+    close_windows_targets(targets, force=False)
     if cancel.wait(5):
         return False
     # A tray/background desktop may ignore WM_CLOSE. Terminate only its own tree.
-    command = ("Get-CimInstance Win32_Process | Where-Object { " + DESKTOP_FILTER + " } | ForEach-Object { "
-               "& taskkill.exe /PID $_.ProcessId /T /F 2>$null | Out-Null }")
-    powershell(command)
+    close_windows_targets(targets, force=True)
     deadline = time.monotonic() + 60
     while m.busy():
-        m.require(time.monotonic() < deadline, 'Codex CLI 或 IDE 会话仍在运行，未修改配置。请退出这些会话后重试。')
+        if time.monotonic() >= deadline:
+            raise RuntimeError(portable.blocker_message())
         if cancel.wait(1):
             return False
     return True
+
+
+def close_windows_targets(targets, force):
+    if not targets:
+        return
+    encoded = base64.b64encode(json.dumps(targets).encode('utf-8')).decode('ascii')
+    action = "& taskkill.exe /PID $record.pid /T /F 2>$null | Out-Null" if force else "$p = Get-Process -Id $record.pid -ErrorAction SilentlyContinue; if ($p -and $p.MainWindowHandle -ne 0) { [void]$p.CloseMainWindow() }"
+    # PID, executable and creation time must still match; a reused PID is never closed.
+    command = ("$targets = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String('" + encoded + "')) | ConvertFrom-Json; "
+        "foreach ($record in $targets) { $live = Get-CimInstance Win32_Process -Filter ('ProcessId=' + $record.pid); "
+        "if ($live -and $live.ExecutablePath -eq $record.executable -and $live.CreationDate.ToUniversalTime().Ticks.ToString() -eq $record.created) { " + action + " } }")
+    powershell(command)
 
 
 def resolve_posix():
@@ -89,7 +106,8 @@ def close_posix(cancel):
             return False
     deadline = time.monotonic() + 60
     while m.busy():
-        m.require(time.monotonic() < deadline, '独立 Codex CLI / IDE 会话仍在运行。请退出后重试；配置未修改。')
+        if time.monotonic() >= deadline:
+            raise RuntimeError(portable.blocker_message())
         if cancel.wait(1):
             return False
     return not cancel.is_set()

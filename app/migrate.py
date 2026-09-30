@@ -166,12 +166,8 @@ def preview(plan):
     print('\nConfig, credentials, model selection and conversation text will not be changed.')
 
 def busy():
-    if os.name != 'nt':
-        from portable import processes, is_codex
-        return any(is_codex(p['executable']) for p in processes())
-    command = "@(Get-CimInstance Win32_Process | Where-Object { $_.Name -eq 'codex.exe' -or $_.Name -eq 'Codex.exe' -or ($_.Name -eq 'ChatGPT.exe' -and $_.ExecutablePath -like '*OpenAI.Codex*') }).Count"
-    result = subprocess.run(['powershell.exe', '-NoProfile', '-NonInteractive', '-Command', command], capture_output=True, text=True, check=True, creationflags=subprocess.CREATE_NO_WINDOW)
-    return int(result.stdout.strip()) > 0
+    from portable import blockers
+    return bool(blockers())
 
 def idle():
     require(not busy(), 'Codex is running. Exit Codex desktop, CLI and IDE sessions, then retry.')

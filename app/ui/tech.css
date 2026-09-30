@@ -200,3 +200,5 @@ button.avatar { cursor:pointer; padding:0; }
 .dialog-heading { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; }
 .dialog-actions { display:flex; justify-content:flex-end; gap:12px; margin-top:20px; }
 #details .primary { background:#79dfbb; color:#102720; border-radius:6px; padding:12px 18px; }
+/* Keep process IDs and paths readable in multiline operation errors. */
+#job-message { white-space: pre-line; overflow-wrap: anywhere; }
