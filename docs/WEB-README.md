@@ -31,6 +31,8 @@ model = "gpt-6-astra"
 
 官方配置位置和优先级：[OpenAI 配置文档](https://learn.chatgpt.com/docs/config-file/config-basic)。更高优先级的启动参数、系统管理配置或系统凭据库仍可能覆盖文件配置；本工具只管理 `CODEX_HOME` 中的文件。
 
+当前账号通过登录凭据、`model_provider` 和所选 provider 的定义识别。只更改模型、推理强度或审查模型时，仍可关联原账号，并显示“当前设置与保存副本不同”；保存副本不会自动改写。存在多个同账号配置时，优先匹配完整模型设置，再参考上次选择；无法唯一确定时保持未关联。服务地址或凭据变化不会仅凭上次选择记录认定为当前账号。
+
 ## 文件存储与恢复
 
 - 默认管理环境变量 `CODEX_HOME` 指定的位置，否则是当前用户的 `.codex`。可通过 `scripts/Start-Web.cmd --home "D:\CodexHome"` 指定。
@@ -64,5 +66,7 @@ model = "gpt-6-astra"
 ## 验证
 
 旧测试脚本已从发布目录移除，可从 Git 历史查阅；发布前曾在临时目录验证真实 SQLite/JSONL 迁移、完整恢复、失败回退、令牌轮换与同步、重启顺序、等待取消、仅 auth 配置生成与中断恢复。网络和桌面关闭/启动使用测试替身，不会写入真实 `.codex`、发出真实模型请求或关闭正在使用的 Codex。
+
+当前账号识别的回归测试可在项目根目录运行 `python -m unittest discover -s tests -p test_profile_identity.py -v`。测试使用临时目录和虚构凭据，覆盖模型变化、Provider 与凭据变化、配置歧义和令牌刷新，不访问真实账号或模型服务。
 
 静态界面使用本地 Lucide 图标（ISC 许可），无需联网加载界面资源。启动服务后端仅使用 Python 标准库。

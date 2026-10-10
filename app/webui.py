@@ -98,6 +98,19 @@ def same_config(left, right):
         return left == right
 
 
+def same_provider(left, right):
+    """Identify the account's service independently of model preferences."""
+    if not left or not right:
+        return False
+    try:
+        a, b = config_identity(left), config_identity(right)
+        provider = a['model_provider']
+        return (provider == b['model_provider']
+                and a['model_providers'].get(provider, {}) == b['model_providers'].get(provider, {}))
+    except (ValueError, UnicodeError):
+        return False
+
+
 def config_key(raw):
     try:
         value = config_identity(raw)
@@ -239,11 +252,13 @@ class Manager:
                 profiles.append({**meta, '_key': (check_auth(auth).get('OPENAI_API_KEY') or (check_auth(auth).get('tokens') or {}).get('account_id') or m.sha(auth), config_key(config)),
                                  'provider': cfg['target'], 'model': cfg['model'],
                                  'auto_config': not (path / 'config.toml').exists(),
-                                 'active': path.name == active and same_config(config, comparable_live_cfg),
-                                 'matches': same_config(config, comparable_live_cfg) and same_account(auth, live_auth),
+                                 '_account_matches': same_account(auth, live_auth) and same_provider(config, comparable_live_cfg),
+                                 '_config_matches': same_config(config, comparable_live_cfg),
+                                 'active': False, 'matches': False,
                                  'auth_type': 'API Key' if check_auth(auth).get('OPENAI_API_KEY') else 'ChatGPT'})
             current = {'provider': 'openai', 'model': None, 'has_auth': live_auth is not None,
                        'has_config': live_cfg is not None, 'saved': False, 'save_name': None,
+                       'config_changed': False,
                        'unsaved': bool(live_auth), 'first_use': not any(p['name'] not in ('默认配置', '未命名配置') for p in profiles)}
             try:
                 if live_cfg is not None:
@@ -262,14 +277,21 @@ class Manager:
                     continue
                 seen.add(key)
                 visible.append(profile)
-            for profile in profiles:
-                if profile['matches'] and profile['name'] not in ('默认配置', '未命名配置'):
-                    current.update(saved=True, save_name=profile['name'], unsaved=False)
-                    break
-            if not current['saved'] and active:
-                selected = next((p for p in profiles if p['id'] == active and p['name'] not in ('默认配置', '未命名配置') and p['active']), None)
-                if selected:
-                    current.update(saved=True, save_name=selected['name'], unsaved=False)
+            # Prefer an exact saved variant; use the last selection or a unique
+            # account match when only model settings differ. Never guess a variant.
+            matching = [p for p in visible if p['_account_matches']]
+            exact = [p for p in matching if p['_config_matches']]
+            candidates = exact or matching
+            selected = next((p for p in candidates if p['id'] == active), None)
+            if selected is None and len(candidates) == 1:
+                selected = candidates[0]
+            if selected is not None:
+                selected.update(active=selected['id'] == active, matches=True)
+                current.update(saved=True, save_name=selected['name'], unsaved=False,
+                               config_changed=not selected['_config_matches'])
+            for profile in visible:
+                profile.pop('_account_matches')
+                profile.pop('_config_matches')
             backups = []
             for path in sorted(self.backups.glob('*/manifest.json'), reverse=True):
                 obj = m.load(path)

@@ -65,7 +65,7 @@ function render() {
   $('#current-provider').textContent = state.current.provider;
   $('#current-model').textContent = state.current.model || 'Codex 默认';
   $('#current-files').textContent = state.current.error ? '配置需检查' : state.current.has_auth ? (state.current.has_config ? '已就绪' : '待自动生成配置') : '缺少 auth.json';
-  $('#current-save-status').textContent = state.current.saved ? `已保存：${state.current.save_name}` : state.current.has_auth ? '未命名，已自动保留，可随时命名保存' : '未检测到当前 auth.json';
+  $('#current-save-status').textContent = state.current.saved ? (state.current.config_changed ? `已关联：${state.current.save_name} · 当前设置与保存副本不同` : `已保存：${state.current.save_name}`) : state.current.has_auth ? '未命名，已自动保留，可随时命名保存' : '未检测到当前 auth.json';
   $('#current-save-status').className = 'current-save-status ' + (state.current.saved ? 'saved' : 'unsaved');
   $('#onboarding').hidden = !state.current.unsaved;
   $('#onboarding-text').textContent = state.current.first_use ? '这是首次使用，请先为当前 auth.json 和 config.toml 命名；系统已自动保留临时快照。' : '当前配置尚未关联到已命名账号，系统已自动保留临时快照。';
