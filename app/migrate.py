@@ -134,6 +134,7 @@ def make_plan(root, db=None, sources=None, ids=None, archived=False, config=None
     cfg = config if config is not None else configuration(root)
     db = database(root, db)
     records = []
+    missing_sessions = []
     with closing(connect(db, True)) as conn:
         columns = {r['name'] for r in conn.execute('pragma table_info(threads)')}
         model_column = 'model' if 'model' in columns else 'NULL AS model'
@@ -148,6 +149,14 @@ def make_plan(root, db=None, sources=None, ids=None, archived=False, config=None
             if ids and row['id'] not in ids:
                 continue
             path = session_path(root, row['rollout_path'])
+            # Codex can retain a database row after its JSONL rollout was
+            # deleted or moved. Report and skip it so account switching can
+            # still complete without inventing an empty transcript.
+            if not path.is_file():
+                missing_sessions.append({'id': row['id'], 'title': row['title'],
+                                         'source': row['model_provider'], 'path': str(path),
+                                         'archived': bool(row['archived'])})
+                continue
             raw = path.read_bytes()
             updated = transform(raw, row['id'], row['model_provider'], cfg['target'])
             records.append({'id': row['id'], 'title': row['title'], 'source': row['model_provider'],
@@ -156,7 +165,8 @@ def make_plan(root, db=None, sources=None, ids=None, archived=False, config=None
     if ids:
         missing = set(ids) - {r['id'] for r in records}
         require(not missing, 'Requested IDs not eligible (already target, archived, filtered or missing): ' + ', '.join(sorted(missing)))
-    return {'version': VERSION, 'created_at': datetime.now().isoformat(), 'home': str(root), 'database': str(db), 'config': cfg, 'records': records}
+    return {'version': VERSION, 'created_at': datetime.now().isoformat(), 'home': str(root), 'database': str(db), 'config': cfg,
+            'records': records, 'missing_sessions': missing_sessions}
 
 def preview(plan):
     print(f"\nCODEX_HOME: {plan['home']}\nDatabase: {plan['database']}\nTarget provider: {plan['config']['target']}\nCurrent model: {plan['config']['model']}\nSelected conversations: {len(plan['records'])}\n")

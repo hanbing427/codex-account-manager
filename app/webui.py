@@ -421,12 +421,13 @@ class Manager:
     def plan(self, pid, archived=False):
         _, _, _, cfg = self.read_profile(pid)
         if not list(self.root.glob('state_*.sqlite')):
-            return {'version': m.VERSION, 'config': cfg, 'records': []}
+            return {'version': m.VERSION, 'config': cfg, 'records': [], 'missing_sessions': []}
         return m.make_plan(self.root, archived=archived, config=cfg)
 
     def preview(self, pid, archived=False):
         plan = self.plan(pid, archived)
         return {'provider': plan['config']['target'], 'count': len(plan['records']),
+                'missing': len(plan.get('missing_sessions', [])),
                 'records': [{'title': r['title'], 'source': r['source']} for r in plan['records'][:100]]}
 
     def backup(self, name):
@@ -498,7 +499,8 @@ class Manager:
             m.save(self.profile_dir(pid) / 'meta.json', meta)
             manifest.update(state='applied', after={f: m.sha((self.root / f).read_bytes()) for f in FILES if (self.root / f).exists()})
             m.save(path / 'manifest.json', manifest)
-            return {'backup': path.name, 'count': len(plan['records'])}
+            return {'backup': path.name, 'count': len(plan['records']),
+                    'missing': len(plan.get('missing_sessions', []))}
         except Exception:
             try:
                 guard()
@@ -617,7 +619,7 @@ class Manager:
                     m.idle()
                     if action in ('switch', 'update'):
                         result = self.switch(payload['id'], bool(payload.get('archived')))
-                        message = f'切换完成，已迁移 {result["count"]} 个对话。可以启动 Codex。'
+                        message = f'切换完成，已迁移 {result["count"]} 个对话。' + (f'跳过 {result["missing"]} 个缺失会话文件。' if result.get('missing') else '') + '可以启动 Codex。'
                     elif action == 'recover-conversations':
                         history_import.recover(self.root, self.store)
                         message = '已核对并恢复中断的对话导入。可以启动 Codex。'

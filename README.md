@@ -114,6 +114,8 @@ $env:CODEX_CLI_EXECUTABLE = 'D:\Tools\Codex\codex.exe'
 
 切换会先关闭 Codex、备份当前文件、移除当前生效的 auth/config，再写入目标账号文件并同步旧会话的 provider。最后重新启动 Codex。**正在进行的任务会中断；独立 CLI/IDE 会话请先退出。**
 
+如果 Codex 数据库中还留有会话记录，但对应的 `sessions/*.jsonl` 已被删除或移动，预览会显示缺失数量并跳过这些会话；账号、config 和 provider 仍会正常切换。原数据库记录不会删除，也不会生成空会话文件。
+
 仅 auth 的账号每次切换都会重新生成官方 provider 的最小配置，不继承上个账号的第三方地址。目前生成配置的默认模型为 `gpt-6-astra`；如果账号或服务不支持，请在配置编辑器选择实际支持的模型。有效 auth 可以恢复登录，过期或撤销的登录凭据仍需重新登录。
 
 ## 3. 功能说明

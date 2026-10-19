@@ -140,7 +140,7 @@ async function updatePreview() {
   try {
     const preview = await api('preview', {id:selectedId, archived:$('#archived').checked});
     if (generation !== previewGeneration) return;
-    $('#preview-count').textContent = `${preview.count} 个对话`;
+    $('#preview-count').textContent = `${preview.count} 个可迁移对话` + (preview.missing ? `，${preview.missing} 个会话文件缺失，将跳过` : '');
     $('#preview-list').innerHTML = preview.records.map(r => `<div class="preview-item"><span>${esc(r.title || '未命名对话')}</span><small>${esc(r.source)} → ${esc(preview.provider)}</small></div>`).join('');
     $('#confirm-go').disabled = false;
   } catch (e) { if (generation === previewGeneration) $('#confirm-error').textContent = e.message; }

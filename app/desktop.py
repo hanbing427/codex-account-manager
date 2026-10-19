@@ -13,9 +13,10 @@ import time
 import migrate as m
 import portable
 
-def powershell(command):
+def powershell(command, input_text=None):
     return subprocess.run(['powershell.exe', '-NoProfile', '-NonInteractive', '-Command', command],
-                          capture_output=True, text=True, check=True, creationflags=subprocess.CREATE_NO_WINDOW)
+                          input=input_text, capture_output=True, text=True, check=True,
+                          creationflags=subprocess.CREATE_NO_WINDOW)
 
 
 def close_desktop(cancel):
@@ -52,10 +53,12 @@ def close_windows_targets(targets, force):
     encoded = base64.b64encode(json.dumps(targets).encode('utf-8')).decode('ascii')
     action = "& taskkill.exe /PID $record.pid /T /F 2>$null | Out-Null" if force else "$p = Get-Process -Id $record.pid -ErrorAction SilentlyContinue; if ($p -and $p.MainWindowHandle -ne 0) { [void]$p.CloseMainWindow() }"
     # PID, executable and creation time must still match; a reused PID is never closed.
-    command = ("$targets = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String('" + encoded + "')) | ConvertFrom-Json; "
+    # The process tree can be large. Stream its ASCII payload over stdin so
+    # CreateProcess receives a bounded command line, regardless of target count.
+    command = ("$targets = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String([Console]::In.ReadToEnd())) | ConvertFrom-Json; "
         "foreach ($record in $targets) { $live = Get-CimInstance Win32_Process -Filter ('ProcessId=' + $record.pid); "
         "if ($live -and $live.ExecutablePath -eq $record.executable -and $live.CreationDate.ToUniversalTime().Ticks.ToString() -eq $record.created) { " + action + " } }")
-    powershell(command)
+    powershell(command, input_text=encoded)
 
 
 def resolve_posix():
