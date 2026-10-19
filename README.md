@@ -242,5 +242,6 @@ python app/webui.py --no-browser
 
 - [详细部署、原 Provider 迁移 CLI 和回退说明](docs/ADVANCED.md)
 - [网页操作与 OAuth 维护细节](docs/WEB-README.md)
+- [交给另一台电脑上的 AI 继续维护](docs/AI-HANDOFF.md)
 
 图标使用本地 Lucide 资源，许可见 [ui/LICENSE-lucide](app/ui/LICENSE-lucide)。
