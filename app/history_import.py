@@ -13,15 +13,10 @@ import history_export
 import conversation_bundle as bundle
 import conversation_restore as restore
 
-MAX_UPLOAD = 8 * 1024**3
-
-
 def inspect_archive(path):
     try:
         with zipfile.ZipFile(path) as archive:
             entries = archive.infolist()
-            m.require(len(entries) <= 60000 and sum(e.file_size for e in entries) <= 12 * 1024**3,
-                      '解压内容过大，请分批导出再导入。')
             names = [e.filename for e in entries]
             m.require(len(names) == len(set(names)), '压缩包包含重复路径。')
             for entry in entries:
@@ -30,12 +25,10 @@ def inspect_archive(path):
                           and ':' not in entry.filename and (entry.external_attr >> 16) & 0o170000 != 0o120000,
                           '压缩包包含不安全路径或符号链接。')
             info = archive.getinfo('conversations.json')
-            m.require(info.file_size <= 16 * 1024 * 1024, '对话清单过大。')
             manifest = json.loads(archive.read(info))
             m.require(isinstance(manifest, dict) and manifest.get('version') in (1, 2) and isinstance(manifest.get('records'), list),
                       '请使用本软件导出的对话 ZIP。')
             records, ids, paths = [], set(), set()
-            session_bytes = 0
             for record in manifest['records']:
                 m.require(isinstance(record, dict), '对话清单格式错误。')
                 relative = record.get('path', '')
@@ -43,9 +36,7 @@ def inspect_archive(path):
                 parts = PurePosixPath(relative).parts
                 m.require(len(parts) >= 2 and parts[0] in ('sessions', 'archived_sessions') and relative.endswith('.jsonl'), '无效会话路径。')
                 entry = archive.getinfo(relative)
-                session_bytes += entry.file_size
-                m.require(session_bytes <= 512 * 1024**2, '会话正文总量超过 512 MB，请分批导入。')
-                m.require(0 < entry.file_size <= 128 * 1024 * 1024, '单条对话为空或超过 128 MB，请检查导出文件。')
+                m.require(entry.file_size > 0, '单条对话为空，请检查导出文件。')
                 raw = archive.read(entry)
                 first = None
                 for line in raw.splitlines():

@@ -763,7 +763,7 @@ class Handler(BaseHTTPRequestHandler):
         try:
             length = int(self.headers.get('Content-Length', '0'))
             if self.path == '/api/conversations/upload':
-                m.require(0 < length <= history_import.MAX_UPLOAD, 'ZIP 最大支持 8 GB，请分批导入。')
+                m.require(length > 0, 'ZIP 文件为空。')
                 manager = self.server.manager
                 with manager.mutex:
                     manager.ensure_ready()
@@ -787,7 +787,10 @@ class Handler(BaseHTTPRequestHandler):
                         path.unlink(missing_ok=True)
                         raise
                 return self.send(200, {'token': token, 'records': records})
-            m.require(0 < length <= 2_000_000, '请求文件过大或为空。')
+            if self.path.startswith('/api/conversations/'):
+                m.require(length > 0, '请求内容为空。')
+            else:
+                m.require(0 < length <= 2_000_000, '请求文件过大或为空。')
             data = json.loads(self.rfile.read(length))
             m.require(isinstance(data, dict), '无效请求。')
             manager = self.server.manager

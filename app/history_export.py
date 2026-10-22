@@ -160,7 +160,6 @@ def archive_history(root, store, ids=None, project_ids=None, extra_paths=None):
                 m.require(before.st_size == after.st_size == asset['bytes'] and before.st_mtime_ns == after.st_mtime_ns, '文件在打包期间发生变化，请保存文件并重新导出。')
                 asset['sha256'] = digest.hexdigest()
             migration_raw = json.dumps(migration, ensure_ascii=False, indent=2).encode()
-            m.require(len(migration_raw) <= 256 * 1024**2, '聊天历史元数据超过 256 MB，请分批导出。')
             archive.writestr('migration.json', migration_raw)
             if migration['missing'] or migration['omitted']:
                 data['warnings'].append(f'有 {len(migration["missing"])} 个文件引用缺失、{len(migration["omitted"])} 个文件或目录未打包，详见 migration.json。')

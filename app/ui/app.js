@@ -511,7 +511,6 @@ $('#conversation-import-file').onchange = async () => {
   if (!file) return;
   $('#conversation-import-status').textContent = '正在上传并校验对话…';
   try {
-    if (file.size > 8 * 1024 ** 3) throw new Error('ZIP 最大 8 GB，请分批导入');
     const response = await fetch('/api/conversations/upload', {method:'POST',headers:{'Content-Type':'application/zip','X-CSRF-Token':token},body:file});
     const result = await response.json();
     if (!response.ok) throw new Error(result.error || '上传失败');

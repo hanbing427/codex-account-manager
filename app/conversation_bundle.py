@@ -167,7 +167,6 @@ def collect(root, records, project_ids=None, extra_paths=None):
             entry = assets.setdefault(key, {'source': key, 'bytes': resolved.stat().st_size, 'thread_ids': set(), 'references': set()})
             entry['thread_ids'].update(thread_ids)
             entry['references'].add(str(path))
-            m.require(len(assets) <= 50000, '文件超过 50000 个，请拆分导出。')
         except OSError:
             omitted.add(str(path) + '（无法读取）')
 
@@ -260,8 +259,6 @@ def collect(root, records, project_ids=None, extra_paths=None):
         for asset in pending:
             scanned.add(asset['source'])
             source = Path(asset['source'])
-            if asset['bytes'] > 16 * 1024**2:
-                omitted.add(str(source) + '（过大，未扫描文档内嵌资源）'); continue
             text = source.read_text(encoding='utf-8', errors='replace')
             for value in re.findall(r'(?:src|href)\s*=\s*["\']([^"\']+)["\']|url\(["\']?([^\)"\']+)', text, flags=re.I):
                 ref = value[0] or value[1]
@@ -271,7 +268,6 @@ def collect(root, records, project_ids=None, extra_paths=None):
                 if dependency:
                     add(dependency, asset['thread_ids'])
     total = sum(a['bytes'] for a in assets.values())
-    m.require(total <= 8 * 1024**3 and all(a['bytes'] <= 2 * 1024**3 for a in assets.values()), '文件总量超过 8 GB 或单文件超过 2 GB，请拆分导出。')
     for asset in assets.values():
         asset['thread_ids'] = sorted(asset['thread_ids'])
         asset['references'] = sorted(asset['references'])

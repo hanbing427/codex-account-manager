@@ -32,7 +32,6 @@ def safe_relative(value):
 def migration_data(archive, record_ids):
     if 'migration.json' not in archive.namelist():
         return None
-    m.require(archive.getinfo('migration.json').file_size <= 256 * 1024**2, '迁移元数据过大，请分批导出。')
     value = json.loads(archive.read('migration.json'))
     m.require(isinstance(value, dict) and isinstance(value.get('assets'), list) and isinstance(value.get('metadata'), dict), '迁移清单格式错误。')
     seen = set()
@@ -42,7 +41,7 @@ def migration_data(archive, record_ids):
         m.require(relative.casefold() not in seen, '文件路径存在大小写冲突。')
         seen.add(relative.casefold())
         info = archive.getinfo(relative)
-        m.require(info.file_size == asset.get('bytes') and info.file_size <= 2 * 1024**3, '文件大小与清单不一致。')
+        m.require(info.file_size == asset.get('bytes'), '文件大小与清单不一致。')
         m.require(isinstance(asset.get('source'), str) and isinstance(asset.get('references', []), list)
                   and all(isinstance(x, str) for x in asset.get('references', [])), '文件源路径格式错误。')
         m.require(isinstance(asset.get('thread_ids'), list) and set(asset['thread_ids']) <= record_ids, '文件所属对话无效。')
